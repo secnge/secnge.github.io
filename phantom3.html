@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Phantom Deeplink Spoof (browse)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+  <h2>Deep Link Spoof (Phantom)</h2>
+  <button onclick="launchSpoof()">fake transaction</button>
+
+  <script>
+    function launchSpoof() {
+      // 1) Decoy: buka situs lain
+      setTimeout(() => {
+        window.open("https://etherscan.io/", "_blank");
+      }, 100);
+
+      // 2) Redirect utama ke Phantom 'browse' (universal link)
+      const target = "https://etherscan.io/"; // ganti ke URL yang kamu mau buka di in-app browser Phantom
+      const ref = location.href;              // atau pakai domain/aplikasi kamu
+      const deeplink = "https://phantom.app/ul/browse/" +
+        encodeURIComponent(target) + "?ref=" + encodeURIComponent(ref);
+
+      // Catatan: deeplinks harus diklik user / di-handle app (bukan dipaste sembarang)
+      // https://docs.phantom.com/phantom-deeplinks/other-methods/browse
+      window.location.href = deeplink;
+    }
+  </script>
+</body>
+</html>
